@@ -18,6 +18,7 @@ blue = (50, 153, 213)
 # Must be divisible by 10 with no remainder
 dis_width = 600
 dis_height = 400
+loop_count = 0
 
 # Creates display
 dis = pygame.display.set_mode((dis_width, dis_height))
@@ -26,7 +27,9 @@ pygame.display.set_caption('Snake Game')
 clock = pygame.time.Clock()
 
 snake_block = 10
-snake_speed = 15
+snake_speed = 5
+snake_speed_increase = .1
+snake_auto = True
 
 # Sets fonts
 font_style = pygame.font.SysFont("bahnschrift", 25)
@@ -63,6 +66,7 @@ def random_food():
 def gameLoop():
     game_over = False
     game_close = False
+    global snake_speed
 
     # START CODING HERE
 
@@ -75,16 +79,13 @@ def gameLoop():
     # A list that will change as the snake gets bigger, sets starting pos
     snake_List = []
     snake_List.append([x1,y1])
-
-    #print("Head: " + str(snake_List))
+    snake_direction = [10,0]
 
     # Sets the initial length of the snake to 1
-    snake_length = 5
+    snake_length = 1
 
     #Position the food (foodx, foody) to a random location using random module
     random_food()
-
-    #print("Location of the food: (" + str(foodx) + ", " + str(foody) + ")")
 
     #While the game is not over
     while not game_over:
@@ -126,19 +127,32 @@ def gameLoop():
                 if pressed_keys[pygame.K_UP]:
                     x1 = x1
                     y1 = y1 - snake_block
+                    snake_direction = [0,-snake_block]
                 if pressed_keys[pygame.K_DOWN]:
                     x1 = x1
                     y1 = y1 + snake_block
+                    snake_direction = [0,snake_block]
                 if pressed_keys[pygame.K_LEFT]:
                     x1 = x1 - snake_block
                     y1 = y1
+                    snake_direction = [-snake_block,0]
                 if pressed_keys[pygame.K_RIGHT]:
                     x1 = x1 + snake_block
                     y1 = y1
+                    snake_direction = [snake_block,0]
 
                 snake_List.append([x1, y1])
                 if y1 < 0 or y1 >= dis_height or x1 < 0 or x1 >= dis_width:
                     game_close = True
+
+        # Bonus area...make the snake move auutomatically by remembering last direction
+        if snake_auto:
+            x1 = x1 + snake_direction[0]
+            y1 = y1 + snake_direction[1]
+            snake_List.append([x1, y1])
+            del snake_List[0]
+            if y1 < 0 or y1 >= dis_height or x1 < 0 or x1 >= dis_width:
+                game_close = True
 
         #display playing field
         dis.fill(blue)
@@ -152,17 +166,14 @@ def gameLoop():
         #       So you're deleting positions your snake has moved off of
         #       (which would be the oldest entry)
         if len(snake_List) > snake_length:
-            #print(len(snake_List))
             del snake_List[0]
 
         # 10. Check if any part of your snake is touching any other part of your snake
         #   If so, end the game
         if len(snake_List) > 1:
             headless_snake = snake_List[:-1]
-            #print(headless_snake(len(snake_List)-1))
             if [x1,y1] in headless_snake:
                 game_close = True
-                #print(headless_snake)
 
         our_snake(snake_block, snake_List)
         Your_score(snake_length - 1)
@@ -175,11 +186,14 @@ def gameLoop():
         if (x1,y1) == (foodx, foody):
             random_food()
             snake_length = snake_length + 1
+            snake_speed = snake_speed + snake_speed_increase
 
         clock.tick(snake_speed)
+        global loop_count
+        loop_count += 1
+        print(loop_count)
 
     pygame.quit()
     quit()
-
 
 gameLoop()
